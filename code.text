@@ -1,0 +1,50 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+const int gerkonPin = 2;  // Пин, к которому подключен геркон
+
+const char* botToken = "YOUR_BOT_TOKEN";
+const char* chatId = "YOUR_CHAT_ID";
+
+WiFiClient client;
+HTTPClient http;
+
+void setup() {
+  Serial.begin(9600);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+
+  Serial.println("Connected to WiFi");
+}
+
+void loop() {
+  int gerkonState = digitalRead(gerkonPin);  // Считываем состояние геркона
+
+  if (gerkonState == LOW) {
+    // Соединение с Telegram Bot API
+    String url = "https://api.telegram.org/bot" + String(botToken) + "/sendMessage?chat_id=" + String(chatId) + "&text=Цепь разорвана";
+    http.begin(client, url);
+
+    // Отправка запроса
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+    } else {
+      Serial.println("Error sending message");
+    }
+
+    http.end();
+  }
+  
+  delay(1000);  // Задержка между итерациями цикла
+}
